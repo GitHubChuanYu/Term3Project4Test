@@ -24,8 +24,7 @@ as well as to verify your TL classifier.
 TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
-LOOKAHEAD_WPS = 30 # Number of waypoints we will publish. You can change this number
-REFERENCE_VELOCITY = 11.0       # 11.0 m/s = ~25mph
+LOOKAHEAD_WPS = 100 # Number of waypoints we will publish. You can change this number
 
 def get_closest_waypoint(previousClosest, x, y, yaw, waypoints):
     closest_pnt = -1
@@ -90,31 +89,21 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
-        self.sampling_rate = 50.0 # Rate for the main loop
         self.loop()
         #rospy.spin()
 
-    def loop(self):     # loop, that repeats with a rate of 'self.sammpling_ate'
-        r = rospy.Rate(self.sampling_rate)
+    def loop(self):     # loop, that repeats with a rate of 50Hz
+        r = rospy.Rate(50)
         prev_velocity = 0
         while not rospy.is_shutdown():
             if self.pose_updated and self.way_point_set:
                 self.closest_waypoint = get_closest_waypoint(self.closest_waypoint ,self.pose_x, self.pose_y, self.yaw, self.waypoints)
-                #Not sure if we need to wait for sampling to get the closest waypoint
-                #Seems a bit late
             if (self.closest_waypoint != -1):
                 ahead = []
                 n_waypoints = len(self.waypoints)
                 if (n_waypoints > LOOKAHEAD_WPS):
                     n_waypoints = self.closest_waypoint + LOOKAHEAD_WPS
                     ahead = self.waypoints[self.closest_waypoint:n_waypoints]
-                    #for i in range(n_waypoints):
-                    #   if (self.closest_waypoint + i < len(self.waypoints)):
-                    #           ahead.append(self.waypoints[self.closest_waypoint+i])
-                    #           self.set_waypoint_velocity(self.waypoints, self.closest_waypoint + i, REFERENCE_VELOCITY)
-                    #   else:
-                    #           ahead.append(self.waypoints[self.closest_waypoint+i-len(self.waypoints)])
-                    #           self.set_waypoint_velocity(self.waypoints, self.closest_waypoint + i -len(self.waypoints), REFERENCE_VELOCITY)
                     lane = Lane()
                     lane.header.frame_id = '/world'
                     lane.header.stamp = rospy.Time(0)
